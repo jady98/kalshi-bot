@@ -9,6 +9,7 @@ class Settings(BaseSettings):
 
     # Kalshi API credentials
     KALSHI_API_KEY_ID: Optional[str] = None
+    KALSHI_PRIVATE_KEY: Optional[str] = None
     KALSHI_PRIVATE_KEY_PATH: Optional[str] = None
 
     # Bot behaviour
