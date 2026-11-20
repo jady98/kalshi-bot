@@ -35,10 +35,19 @@ class KalshiClient:
     def _load_private_key(self):
         if self._private_key is not None:
             return self._private_key
-        key_path = settings.KALSHI_PRIVATE_KEY_PATH
-        if not key_path:
-            raise ValueError("KALSHI_PRIVATE_KEY_PATH not configured")
-        pem_data = Path(key_path).expanduser().read_bytes()
+        # Prefer the PEM contents supplied directly as a Render environment
+        # variable. Also accept escaped newlines, which are common in dashboards.
+        private_key_pem = settings.KALSHI_PRIVATE_KEY
+        if private_key_pem:
+            pem_data = private_key_pem.replace("\\n", "\n").encode("utf-8")
+        else:
+            key_path = settings.KALSHI_PRIVATE_KEY_PATH
+            if not key_path:
+                raise ValueError(
+                    "Configure KALSHI_PRIVATE_KEY (PEM contents) or KALSHI_PRIVATE_KEY_PATH (PEM file path)"
+                )
+            pem_data = Path(key_path).expanduser().read_bytes()
+
         self._private_key = serialization.load_pem_private_key(pem_data, password=None)
         return self._private_key
 
@@ -217,4 +226,4 @@ class KalshiClient:
 
 
 def kalshi_credentials_present() -> bool:
-    return bool(settings.KALSHI_API_KEY_ID and settings.KALSHI_PRIVATE_KEY_PATH)
+    return bool(settings.KALSHI_API_KEY_ID and (settings.KALSHI_PRIVATE_KEY or settings.KALSHI_PRIVATE_KEY_PATH))
